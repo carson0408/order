@@ -1,7 +1,7 @@
 # order
 
 SQL
-_use order_s;
+use order_s;
  create table order_table(
  
  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键id',
