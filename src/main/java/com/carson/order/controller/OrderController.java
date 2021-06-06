@@ -1,8 +1,11 @@
 package com.carson.order.controller;
 
 
+import com.carson.order.annotation.Limit;
 import com.carson.order.domain.*;
 import com.carson.order.repository.OrderRepository;
+import com.carson.order.response.Result;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,21 +31,28 @@ public class OrderController {
     @Resource
     private OrderRepository orderRepo;
 
+
     @PostMapping("/orders")
-    public Order placeOrder(@RequestBody OrderItem orderItem,
-                            @RequestParam String name,
-                            @RequestParam String street,
-                            @RequestParam String zip) {
-        Collection<OrderItem> orderItems = new ArrayList<>();
-        ((ArrayList<OrderItem>) orderItems).add(orderItem);
-        Order order = Order.builder().withName(name).withAddress(createAddress(street,zip)).withItems(orderItems).build();
-        System.out.println("order:"+order);
-        return orderRepo.save(order);
+    @Limit(key = "orders", period = 60, count = 5, name = "ordersLimit", prefix = "limit")
+    public Result placeOrder(@RequestBody OrderItem orderItem,
+                             @RequestParam String name,
+                             @RequestParam String street,
+                             @RequestParam String zip) {
+        try {
+            Collection<OrderItem> orderItems = new ArrayList<>();
+            ((ArrayList<OrderItem>) orderItems).add(orderItem);
+            Order order = Order.builder().withName(name).withAddress(createAddress(street, zip)).withItems(orderItems).build();
+            System.out.println("order:" + order);
+            return Result.ok(orderRepo.save(order));
+        }catch (Exception e){
+            return Result.error(500,e.getMessage());
+        }
     }
 
 
     @PutMapping("/orders/updateAddress")
-    public Order updateAddress(@RequestParam String street,@RequestParam Integer orderId,@RequestParam String zip){
+    @Limit(key = "updateAddress", period = 60, count = 5, name = "updateAddressLimit", prefix = "limit")
+    public Result updateAddress(@RequestParam String street,@RequestParam Integer orderId,@RequestParam String zip){
         Order order = orderRepo.findById(orderId).orElse(new Order());
         Address address = order.getM_Address();
         if(Objects.isNull(address)){
@@ -52,24 +62,26 @@ public class OrderController {
             address.setStreet(street);
         }
         order.setM_Address(address);
-        return orderRepo.save(order);
+        return Result.ok(orderRepo.save(order));
     }
 
 
     @PostMapping("/orders/payment")
-    public Order payment(@RequestParam Integer orderId) {
+    @Limit(key = "payment", period = 60, count = 5, name = "paymentLimit", prefix = "limit")
+    public Result payment(@RequestParam Integer orderId) {
         Order orderSaved2 = orderRepo.findById(orderId).orElse(new Order());
         if (orderSaved2.setM_OrderStatus(new Payment()))
             orderRepo.save(orderSaved2);
-        return orderSaved2;
+        return Result.ok(orderSaved2);
     }
 
     @PostMapping("/orders/delivery")
-    public Order delivery(@RequestParam Integer orderId) {
+    @Limit(key = "delivery", period = 60, count = 5, name = "deliveryLimit", prefix = "limit")
+    public Result delivery(@RequestParam Integer orderId) {
         Order orderSaved2 = orderRepo.findById(orderId).orElse(new Order());
         if (orderSaved2.setM_OrderStatus(new Delivery()))
             orderRepo.save(orderSaved2);
-        return orderSaved2;
+        return Result.ok(orderSaved2);
     }
 
 
