@@ -2,6 +2,10 @@ package com.carson.order.config;
 
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
+import com.carson.order.cache.CacheManager;
+import com.carson.order.repository.OrderRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,10 +13,10 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import java.net.UnknownHostException;
+import javax.annotation.Resource;
+
 
 /**
  * ClassName BeanConfiguration
@@ -24,6 +28,16 @@ import java.net.UnknownHostException;
  */
 @Configuration
 public class BeanConfiguration {
+
+
+    @Resource
+    private OrderRepository orderRepository;
+
+
+    @Bean
+    public CacheManager cacheManager(OrderRepository orderRepository){
+        return new CacheManager(orderRepository);
+    }
 
     @Bean(name = "redisTemplate")
     @ConditionalOnMissingBean(name = "redisTemplate")
@@ -50,7 +64,7 @@ public class BeanConfiguration {
     @Bean("redisConnectionFactory")
     public LettuceConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration("127.0.0.1", 6379);
-        redisStandaloneConfiguration.setPassword("root");
+        //redisStandaloneConfiguration.setPassword("root");
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
 
