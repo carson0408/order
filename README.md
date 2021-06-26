@@ -32,3 +32,8 @@ use order_s;
   `id` int NOT NULL AUTO_INCREMENT COMMENT '主键id',
   PRIMARY KEY (`id`),
   CONSTRAINT `status_ibfk` FOREIGN KEY(`order_table`) REFERENCES `order_table` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)ENGINE=InnoDB DEFAULT CHARSET=utf8;_
+
+
+
+
+#使用webflux，需要引进spring-boot-starter-webflux包，此时需要去除spring-boot-starter-web包

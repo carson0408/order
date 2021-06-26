@@ -1,5 +1,6 @@
 package com.carson.order.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.hibernate.annotations.Proxy;
 
 
@@ -35,7 +36,7 @@ public class Order {
 
 
     @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    //@JsonBackReference
+    @JsonBackReference
     private Collection<OrderItem> items;
     @Id
     @Column(name = "id")

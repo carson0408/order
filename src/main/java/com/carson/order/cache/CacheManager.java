@@ -8,7 +8,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
-import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
@@ -36,6 +35,7 @@ public class CacheManager {
                     .expireAfterWrite(10, TimeUnit.MINUTES)
                     .weakKeys()
                     .weakValues()
+                    .recordStats()//需要手动打开
                     .build(new OrderCacheLoader(orderRepository));
         }
         new ScheduledThreadPoolExecutor(1).scheduleAtFixedRate(new StatsTask(loadingCache),0,1,TimeUnit.MINUTES);
@@ -63,7 +63,7 @@ public class CacheManager {
         @Override
         public void run() {
             CacheStats stats = loadingCache.stats();
-            log.info("caffeine缓存加载数={},命中率={},命中数={},cacheStats={}",stats.loadCount(),stats.hitRate(),stats.hitCount(),stats);
+            log.info("caffeine缓存加载数={},命中率={},命中数={},平均加载时间={}",stats.loadCount(),stats.hitRate(),stats.hitCount(),stats.averageLoadPenalty());
 
         }
     }
