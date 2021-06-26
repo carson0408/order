@@ -1,6 +1,7 @@
 package com.carson.order.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.ToString;
 import org.hibernate.annotations.Proxy;
 
 
@@ -24,19 +25,19 @@ public class Order {
 
 
 
-    @OneToOne(mappedBy = "order",fetch=FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "order",fetch=FetchType.EAGER,cascade = CascadeType.ALL)
     //@JsonBackReference
     private Address m_Address;
 
-    @OneToOne(mappedBy = "order",fetch=FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "order",fetch=FetchType.EAGER,cascade = CascadeType.ALL)
     private OrderStatus m_OrderStatus;
 
 
 
 
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    @JsonBackReference
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    //@JsonBackReference
     private Collection<OrderItem> items;
     @Id
     @Column(name = "id")

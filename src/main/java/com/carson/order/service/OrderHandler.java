@@ -3,6 +3,7 @@ package com.carson.order.service;
 import com.carson.order.cache.CacheManager;
 import com.carson.order.domain.*;
 import com.carson.order.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -24,6 +25,7 @@ import java.util.Objects;
  * @createTime
  */
 @Component
+@Slf4j
 public class OrderHandler {
 
     @Resource
@@ -33,14 +35,21 @@ public class OrderHandler {
 
     public Mono<ServerResponse> orders(ServerRequest request){
         Mono<OrderItem> orderItemMono = request.bodyToMono(OrderItem.class);
-        OrderItem orderItem = orderItemMono.block();
-        String name = String.valueOf(request.attribute("name").orElse(""));
-        String street = String.valueOf(request.attribute("street").orElse(""));
-        String zip = String.valueOf(request.attribute("zip").orElse(""));
+        String name = String.valueOf(request.queryParam("name").orElse(""));
+        String street = String.valueOf(request.queryParam("street").orElse(""));
+        String zip = String.valueOf(request.queryParam("zip").orElse(""));
         Collection<OrderItem> orderItems = new ArrayList<>();
-        ((ArrayList<OrderItem>) orderItems).add(orderItem);
-        Order order = Order.builder().withName(name).withAddress(createAddress(street, zip)).withItems(orderItems).build();
-        Mono<Order> orderMono = Mono.fromSupplier(()->{return orderRepository.save(order);});
+        //((ArrayList<OrderItem>) orderItems).add(orderItem);
+        //Order order = Order.builder().withName(name).withAddress(createAddress(street, zip)).withItems(orderItems).build();
+        //Mono<Order> orderMono = Mono.fromSupplier(()->{return orderRepository.save(order);});
+        Mono<Order> orderMono = orderItemMono.map(r->{
+            ((ArrayList<OrderItem>) orderItems).add(r);
+            log.error("orderItem:{}",r);
+            Order order = Order.builder().withName(name).withAddress(createAddress(street, zip)).withItems(orderItems).build();
+            log.error("order:{}",order);
+            orderRepository.save(order);
+            return order;
+        });
         return  ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(orderMono,Order.class);
     }
 

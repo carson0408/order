@@ -45,7 +45,8 @@ public class LimitAspect {
 
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-        HttpServletRequest request = RequestHolder.getHttpServletRequest();
+        //注意，如果是使用web可以使用，web-flux不可以使用
+        //HttpServletRequest request = RequestHolder.getHttpServletRequest();
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method signatureMethod = signature.getMethod();
         Limit limit = signatureMethod.getAnnotation(Limit.class);
@@ -53,13 +54,13 @@ public class LimitAspect {
         String key = limit.key();
         if (StringUtils.isEmpty(key)) {
             if (limitType == LimitType.IP) {
-                key = MyStringUtils.getIp(request);
+                //key = MyStringUtils.getIp(request);
             } else {
                 key = signatureMethod.getName();
             }
         }
 
-        ImmutableList<Object> keys = ImmutableList.of(StringUtils.join(limit.prefix(), "_", key, "_", request.getRequestURI().replaceAll("/","_")));
+        ImmutableList<Object> keys = ImmutableList.of(StringUtils.join(limit.prefix(), "_", key, "_", signature.getMethod()));
 
         String luaScript = buildLuaScript();
         RedisScript<Number> redisScript = new DefaultRedisScript<>(luaScript, Number.class);
@@ -72,8 +73,10 @@ public class LimitAspect {
         }
     }
 
+
     /**
      * 限流脚本
+     * @return
      */
     private String buildLuaScript() {
         return "local c" +

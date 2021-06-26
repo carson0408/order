@@ -3,6 +3,7 @@ package com.carson.order.service;
 import com.carson.order.cache.CacheManager;
 import com.carson.order.domain.*;
 import com.carson.order.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -20,6 +21,7 @@ import java.util.Objects;
  * @createTime
  */
 @Service
+@Slf4j
 public class OrderService {
 
     @Resource
@@ -29,7 +31,9 @@ public class OrderService {
 
     public Order orders(OrderItem orderItem,String name,String street,String zip){
         Collection<OrderItem> orderItems = new ArrayList<>();
-        ((ArrayList<OrderItem>) orderItems).add(orderItem);
+        if(Objects.nonNull(orderItem)) {
+            ((ArrayList<OrderItem>) orderItems).add(orderItem);
+        }
         Order order = Order.builder().withName(name).withAddress(createAddress(street, zip)).withItems(orderItems).build();
         return  orderRepository.save(order);
     }
